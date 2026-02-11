@@ -92,9 +92,12 @@ class AMMSimulation {
     // x * y = k
     // (x + daiAfterFee) * (y - clndaiOut) = k
     // clndaiOut = y - k / (x + daiAfterFee)
-    const newPoolDai = this.poolDai + daiAfterFee;
-    const newPoolClndai = this.k / newPoolDai;
+    const tempPoolDai = this.poolDai + daiAfterFee;
+    const newPoolClndai = this.k / tempPoolDai;
     const clndaiOut = this.poolClndai - newPoolClndai;
+
+    // Комиссия остаётся в пуле (реальный AMM)
+    const newPoolDai = this.poolDai + daiIn; // Вся сумма включая комиссию
 
     const effectivePrice = daiIn / clndaiOut;
 
@@ -110,11 +113,14 @@ class AMMSimulation {
     // (x - daiOut) * (y + clndaiIn) = k
     // daiOut = x - k / (y + clndaiIn)
     const newPoolClndai = this.poolClndai + clndaiIn;
-    const newPoolDai = this.k / newPoolClndai;
-    const daiOutBeforeFee = this.poolDai - newPoolDai;
+    const tempPoolDai = this.k / newPoolClndai;
+    const daiOutBeforeFee = this.poolDai - tempPoolDai;
 
     const fee = daiOutBeforeFee * (this.sellFee / 100);
     const daiOut = daiOutBeforeFee - fee;
+
+    // Комиссия остаётся в пуле (из пула выходит только daiOut)
+    const newPoolDai = this.poolDai - daiOut; // Меньше чем tempPoolDai на величину fee
 
     const effectivePrice = daiOut / clndaiIn;
 
@@ -305,12 +311,15 @@ class AMMSimulation {
     // Формула AMM: (x - daiOut) * (y + clndaiIn) = k
     // daiOut = x - k / (y + clndaiIn)
     const newPoolClndai = poolClndai + clndaiAmount;
-    const newPoolDai = k / newPoolClndai;
-    const daiOutBeforeFee = poolDai - newPoolDai;
+    const tempPoolDai = k / newPoolClndai;
+    const daiOutBeforeFee = poolDai - tempPoolDai;
 
     // Вычитаем комиссию
     const fee = daiOutBeforeFee * (this.sellFee / 100);
     const daiOut = daiOutBeforeFee - fee;
+
+    // Комиссия остаётся в пуле
+    const newPoolDai = poolDai - daiOut;
 
     return { daiOut: Math.max(0, daiOut), newPoolDai, newPoolClndai };
   }

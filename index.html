@@ -3,76 +3,121 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ONCLND / CLNDAI Protocol Simulation</title>
+    <title>CLNDAI AMM Simulation</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <div class="container">
       <header>
-        <h1>🎮 ONCLND / CLNDAI Protocol Simulation</h1>
-        <p class="subtitle">
-          PvP-экономическая система с перераспределением долей
-        </p>
+        <div class="pool-stats">
+          <div class="stat price-highlight">
+            <span class="label">Цена CLNDAI</span>
+            <span class="value" id="currentPrice">0.1000</span>
+          </div>
+          <div class="stat">
+            <span class="label">DAI в пуле</span>
+            <span class="value" id="poolDai">10000</span>
+          </div>
+          <div class="stat">
+            <span class="label">CLNDAI в пуле</span>
+            <span class="value" id="poolClndai">100000</span>
+          </div>
+          <div class="stat">
+            <span class="label">k</span>
+            <span class="value" id="constantK">1000000000</span>
+          </div>
+          <div class="stat">
+            <span class="label">День</span>
+            <span class="value" id="currentDay">0</span>
+          </div>
+        </div>
       </header>
 
+      <section class="settings">
+        <div class="settings-row">
+          <label
+            >Комиссия покупки %<input
+              type="number"
+              id="buyFee"
+              value="0.3"
+              min="0"
+              max="10"
+              step="0.1"
+          /></label>
+          <label
+            >Комиссия продажи %<input
+              type="number"
+              id="sellFee"
+              value="0.3"
+              min="0"
+              max="10"
+              step="0.1"
+          /></label>
+          <label
+            >DAI в пуле<input
+              type="number"
+              id="initDai"
+              value="10000"
+              min="100"
+          /></label>
+          <label
+            >CLNDAI в пуле<input
+              type="number"
+              id="initClndai"
+              value="100000"
+              min="100"
+          /></label>
+          <button id="resetPool">Сброс пула</button>
+        </div>
+      </section>
+
       <section class="controls">
-        <h2>Управление симуляцией</h2>
-        <div class="time-tabs">
-          <button class="time-tab active" data-periods="1">1 День</button>
-          <button class="time-tab" data-periods="7">1 Неделя</button>
-          <button class="time-tab" data-periods="30">1 Месяц</button>
-          <button class="time-tab" data-periods="90">3 Месяца</button>
-          <button class="time-tab" data-periods="180">6 Месяцев</button>
-          <button class="time-tab" data-periods="365">1 Год</button>
+        <div class="control-row">
+          <button id="stepDay">+1 День</button>
+          <button id="step7Days">+7 Дней</button>
+          <button id="step30Days">+30 Дней</button>
+          <button id="resetAll">Сбросить всё</button>
         </div>
-        <div class="control-buttons">
-          <button id="runSimulation">▶️ Симулировать выбранный период</button>
-          <button id="resetSimulation">🔄 Сбросить</button>
-          <button id="stepSimulation">⏭️ +1 День</button>
-        </div>
-        <div class="time-display">
-          <span>Текущий день: <strong id="currentPeriod">0</strong></span>
-          <span>Общий пул (P): <strong id="totalPool">0</strong> ONCLND</span>
-          <span>Выбрано: <strong id="selectedPeriod">1 день</strong></span>
+        <div class="add-player-row">
+          <input type="text" id="playerName" placeholder="Имя" />
+          <input
+            type="number"
+            id="playerDai"
+            placeholder="Баланс DAI"
+            value="1000"
+          />
+          <select id="playerStrategy">
+            <option value="passive">Пассивный (редко)</option>
+            <option value="moderate">Умеренный</option>
+            <option value="active">Активный (часто)</option>
+            <option value="whale">Кит (большие объёмы)</option>
+          </select>
+          <button id="addPlayer">+ Игрок</button>
         </div>
       </section>
 
-      <section class="add-player">
-        <h2>Добавить игрока</h2>
-        <div class="form-row">
-          <input type="text" id="playerName" placeholder="Имя игрока" />
-          <input
-            type="number"
-            id="playerDeposit"
-            placeholder="Депозит DAI"
-            min="0"
-          />
-          <input
-            type="number"
-            id="playerFarmRate"
-            placeholder="Скорость фарма CLNDAI/период"
-            min="0"
-            step="0.1"
-          />
-          <button id="addPlayer">➕ Добавить</button>
-        </div>
-      </section>
-
-      <section class="active-players">
-        <h2>🟢 Активные игроки (в игре)</h2>
-        <table id="activePlayersTable">
+      <section class="players">
+        <h2>Игроки</h2>
+        <p class="note">
+          <strong>P/L (один)</strong> — если только этот игрок продаст свои
+          CLNDAI.<br />
+          <strong>P/L (все)</strong> — если ВСЕ игроки одновременно продадут
+          (реалистичный сценарий).<br />
+          <em
+            >Когда все продают — цена обваливается и все получают меньше. Это и
+            есть реальность.</em
+          >
+        </p>
+        <table id="playersTable">
           <thead>
             <tr>
               <th>Имя</th>
-              <th>Вход (период)</th>
-              <th>DAI внесено</th>
-              <th>Комиссия 5%</th>
-              <th>D_i (ONCLND)</th>
-              <th>CLNDAI_game</th>
-              <th>R_i (рейтинг)</th>
-              <th>D_i × R_i</th>
-              <th>Доля в пуле (%)</th>
-              <th>Потенц. вывод</th>
+              <th>DAI</th>
+              <th>CLNDAI</th>
+              <th>Потратил</th>
+              <th>Получил</th>
+              <th>P/L (один)</th>
+              <th>P/L (все)</th>
               <th>Действия</th>
             </tr>
           </thead>
@@ -80,122 +125,66 @@
         </table>
       </section>
 
-      <section class="exited-players">
-        <h2>🔴 Вышедшие игроки</h2>
-        <table id="exitedPlayersTable">
+      <section class="trades">
+        <h2>История сделок</h2>
+        <table id="tradesTable">
           <thead>
             <tr>
-              <th>Имя</th>
-              <th>Вход</th>
-              <th>Выход</th>
-              <th>Периодов в игре</th>
-              <th>DAI внесено</th>
-              <th>D_i (ONCLND)</th>
-              <th>CLNDAI при выходе</th>
-              <th>R_i при выходе</th>
-              <th>Получено ONCLND</th>
-              <th>Получено DAI</th>
-              <th>CLNDAI_free</th>
-              <th>P/L ONCLND</th>
-              <th>Общий P/L*</th>
+              <th>День</th>
+              <th>Игрок</th>
+              <th>Тип</th>
+              <th>Сумма</th>
+              <th>Получил</th>
+              <th>Цена</th>
+              <th>Комиссия</th>
+              <th>DAI пула</th>
+              <th>CLNDAI пула</th>
             </tr>
           </thead>
           <tbody></tbody>
         </table>
-        <p class="note">
-          * Общий P/L учитывает CLNDAI_free по текущему курсу (настраиваемый)
-        </p>
       </section>
 
-      <section class="clndai-settings">
-        <h2>⚙️ Настройки CLNDAI</h2>
-        <div class="form-row">
-          <label>
-            Курс CLNDAI к DAI для расчёта общего P/L:
-            <input
-              type="number"
-              id="clndaiPrice"
-              value="0.1"
-              min="0"
-              step="0.01"
-            />
-          </label>
+      <section class="pl-history">
+        <h2>P/L по дням (DAI)</h2>
+        <div class="table-scroll">
+          <table id="plHistoryTable">
+            <thead>
+              <tr>
+                <th>Игрок</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
         </div>
-      </section>
-
-      <section class="history">
-        <h2>📊 История по периодам</h2>
-        <table id="historyTable">
-          <thead>
-            <tr>
-              <th>Период</th>
-              <th>Активных игроков</th>
-              <th>Общий пул P</th>
-              <th>Σ(D×R)</th>
-              <th>События</th>
-            </tr>
-          </thead>
-          <tbody></tbody>
-        </table>
       </section>
 
       <section class="summary">
-        <h2>📈 Итоговая статистика</h2>
+        <h2>Итоги</h2>
+        <p class="note">
+          <strong>Сумма P/L всех игроков должна быть отрицательной</strong> -
+          AMM это игра с нулевой суммой минус комиссии.<br />
+          Если кто-то в плюсе, значит кто-то другой в минусе. Плюс slippage при
+          продаже больших объёмов.
+        </p>
         <div class="stats-grid">
           <div class="stat-card">
-            <h3>Всего депозитов DAI</h3>
-            <span id="totalDeposits">0</span>
+            <span class="label">Сумма P/L всех</span>
+            <span class="value" id="totalPL">0</span>
           </div>
           <div class="stat-card">
-            <h3>Комиссии протокола</h3>
-            <span id="totalFees">0</span>
+            <span class="label">Всего комиссий</span>
+            <span class="value" id="totalFees">0</span>
           </div>
           <div class="stat-card">
-            <h3>Всего CLNDAI нафармлено</h3>
-            <span id="totalClndaiFarmed">0</span>
+            <span class="label">Всего сделок</span>
+            <span class="value" id="totalTrades">0</span>
           </div>
           <div class="stat-card">
-            <h3>CLNDAI в обороте (free)</h3>
-            <span id="totalClndaiFree">0</span>
+            <span class="label">Объём торгов DAI</span>
+            <span class="value" id="totalVolume">0</span>
           </div>
         </div>
-      </section>
-
-      <section class="formulas">
-        <h2>📐 Формулы протокола</h2>
-        <div class="formula-grid">
-          <div class="formula-card">
-            <h4>Депозит</h4>
-            <code>ONCLND_locked = DAI_in × 0.95</code>
-          </div>
-          <div class="formula-card">
-            <h4>Рейтинг</h4>
-            <code>R_i = 1 + (CLNDAI_game_i / D_i)</code>
-          </div>
-          <div class="formula-card">
-            <h4>Вывод</h4>
-            <code>Вывод_i = P × (D_i × R_i) / Σ(D_j × R_j)</code>
-          </div>
-        </div>
-      </section>
-
-      <section class="scenarios">
-        <h2>🎯 Готовые сценарии</h2>
-        <div class="scenario-buttons">
-          <button id="scenario1">Сценарий 1: Базовый (4 игрока)</button>
-          <button id="scenario2">Сценарий 2: Поздний вход</button>
-          <button id="scenario3">Сценарий 3: Разные скорости фарма</button>
-          <button id="scenario4">Сценарий 4: Реалистичный (10 игроков)</button>
-        </div>
-      </section>
-
-      <section class="period-comparison">
-        <h2>📅 Сравнение по периодам (День / Неделя / Месяц / Год)</h2>
-        <p class="note">
-          Автоматический расчёт потенциальной прибыли/убытка для всех активных
-          игроков
-        </p>
-        <div id="periodComparisonContainer"></div>
       </section>
     </div>
 
